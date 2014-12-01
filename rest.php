@@ -73,6 +73,6 @@ class rest
 
 	protected function init ($sPath)
 	{
-		return curl_init($this->sBaseUri + "/" + ltrim($sPath, "/"));
+		return curl_init($this->sBaseUri . "/" . ltrim($sPath, "/"));
 	}
 }
