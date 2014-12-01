@@ -1,4 +1,4 @@
 freedimension\rest
 ==================
 
-Simple, light weight REST client.
+Simple, light weight REST client PHP class.
