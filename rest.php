@@ -5,7 +5,7 @@ class rest
 {
 	protected $sBaseUri = "";
 
-	public function __construct ($sBaseUri)
+	public function __construct ($sBaseUri = "")
 	{
 		$this->sBaseUri = rtrim($sBaseUri, "/");
 	}
@@ -56,6 +56,11 @@ class rest
 		curl_setopt($rCurl, CURLOPT_POSTFIELDS, $sData);
 		curl_setopt($rCurl, CURLOPT_RETURNTRANSFER, 1);
 		return $this->exec($rCurl);
+	}
+
+	public function setBaseUri ($sBaseUri)
+	{
+		$this->sBaseUri = $sBaseUri;
 	}
 
 	protected function exec (
