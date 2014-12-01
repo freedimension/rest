@@ -29,31 +29,33 @@ class rest
 	}
 
 	public function post (
-		$sData,
+		$mData,
 		$sPath
 	){
 		$rCurl = $this->init($sPath);
+		$mData = $this->encode($mData);
 		curl_setopt($rCurl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 		curl_setopt($rCurl, CURLOPT_POST, 1);
-		curl_setopt($rCurl, CURLOPT_POSTFIELDS, $sData);
+		curl_setopt($rCurl, CURLOPT_POSTFIELDS, $mData);
 		curl_setopt($rCurl, CURLOPT_RETURNTRANSFER, true);
 		return $this->exec($rCurl);
 	}
 
 	public function put (
-		$sData,
+		$mData,
 		$sPath
 	){
 		$rCurl = $this->init($sPath);
+		$mData = $this->encode($mData);
 		curl_setopt($rCurl,
 			CURLOPT_HTTPHEADER,
 			[
 				'Content-Type: application/json',
-				'Content-Length: ' . strlen($sData)
+				'Content-Length: ' . strlen($mData)
 			]
 		);
 		curl_setopt($rCurl, CURLOPT_CUSTOMREQUEST, 'PUT');
-		curl_setopt($rCurl, CURLOPT_POSTFIELDS, $sData);
+		curl_setopt($rCurl, CURLOPT_POSTFIELDS, $mData);
 		curl_setopt($rCurl, CURLOPT_RETURNTRANSFER, 1);
 		return $this->exec($rCurl);
 	}
@@ -61,6 +63,15 @@ class rest
 	public function setBaseUri ($sBaseUri)
 	{
 		$this->sBaseUri = $sBaseUri;
+	}
+
+	protected function encode ($mData)
+	{
+		if ( is_array($mData) )
+		{
+			$mData = json_encode($mData);
+		}
+		return $mData;
 	}
 
 	protected function exec (
