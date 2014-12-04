@@ -4,60 +4,78 @@ namespace freedimension\rest;
 class rest
 {
 	protected $sBaseUri = "";
+	protected $rCurl    = null;
+	protected $hOption  = [];
 
 	public function __construct ($sBaseUri = "")
 	{
 		$this->sBaseUri = rtrim($sBaseUri, "/");
+		$this->rCurl = curl_init();
 	}
 
 	public function delete (
-		$sData = "",
-		$sPath
+		$sPath,
+		$sData = ""
 	){
-		$rCurl = $this->init($sPath);
-		curl_setopt($rCurl, CURLOPT_CUSTOMREQUEST, "DELETE");
-		curl_setopt($rCurl, CURLOPT_POSTFIELDS, $sData);
-		curl_setopt($rCurl, CURLOPT_RETURNTRANSFER, true);
-		return $this->exec($rCurl);
+		$this->init($sPath);
+		$this->opt(CURLOPT_CUSTOMREQUEST, "DELETE");
+		$this->opt(CURLOPT_POSTFIELDS, $sData);
+		$this->opt(CURLOPT_RETURNTRANSFER, true);
+		return $this->exec();
 	}
 
 	public function get ($sPath = null)
 	{
-		$rCurl = $this->init($sPath);
-		curl_setopt($rCurl, CURLOPT_RETURNTRANSFER, 1);
-		return $this->exec($rCurl, true);
+		$this->init($sPath);
+		$this->opt(CURLOPT_RETURNTRANSFER, 1);
+		var_dump($this);
+		return $this->exec(true);
+	}
+
+	public function opt (
+		$iOption,
+		$mValue = null
+	){
+		if ( null === $mValue )
+		{
+			return $this->hOption[$iOption];
+		}
+		else
+		{
+			$this->hOption[$iOption] = $mValue;
+			return curl_setopt($this->rCurl, $iOption, $mValue);
+		}
 	}
 
 	public function post (
-		$mData,
-		$sPath
+		$sPath,
+		$mData
 	){
-		$rCurl = $this->init($sPath);
+		$this->init($sPath);
 		$mData = $this->encode($mData);
-		curl_setopt($rCurl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-		curl_setopt($rCurl, CURLOPT_POST, 1);
-		curl_setopt($rCurl, CURLOPT_POSTFIELDS, $mData);
-		curl_setopt($rCurl, CURLOPT_RETURNTRANSFER, true);
-		return $this->exec($rCurl);
+		$this->opt(CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+		$this->opt(CURLOPT_POST, 1);
+		$this->opt(CURLOPT_POSTFIELDS, $mData);
+		$this->opt(CURLOPT_RETURNTRANSFER, true);
+		return $this->exec();
 	}
 
 	public function put (
-		$mData,
-		$sPath
+		$sPath,
+		$mData
 	){
-		$rCurl = $this->init($sPath);
+		$this->init($sPath);
 		$mData = $this->encode($mData);
-		curl_setopt($rCurl,
-			CURLOPT_HTTPHEADER,
+		$this->opt(CURLOPT_HTTPHEADER,
 			[
 				'Content-Type: application/json',
 				'Content-Length: ' . strlen($mData)
 			]
 		);
-		curl_setopt($rCurl, CURLOPT_CUSTOMREQUEST, 'PUT');
-		curl_setopt($rCurl, CURLOPT_POSTFIELDS, $mData);
-		curl_setopt($rCurl, CURLOPT_RETURNTRANSFER, 1);
-		return $this->exec($rCurl);
+		$this->opt(CURLOPT_CUSTOMREQUEST, 'PUT');
+		$this->opt(CURLOPT_POSTFIELDS, $mData);
+		$this->opt(CURLOPT_RETURNTRANSFER, true);
+		return $this->exec();
 	}
 
 	public function setBaseUri ($sBaseUri)
@@ -75,11 +93,9 @@ class rest
 	}
 
 	protected function exec (
-		$rCurl,
 		$bDecode = false
 	){
-		$mResponse = curl_exec($rCurl);
-		curl_close($rCurl);
+		$mResponse = curl_exec($this->rCurl);
 		if ( $bDecode )
 		{
 			$mResponse = json_decode($mResponse);
@@ -89,6 +105,9 @@ class rest
 
 	protected function init ($sPath)
 	{
-		return curl_init($this->sBaseUri . "/" . ltrim($sPath, "/"));
+		$this->hOption = [];
+		curl_reset($this->rCurl);
+		$this->opt(CURLOPT_URL, $this->sBaseUri . "/" . ltrim($sPath, "/"));
+		return $this->rCurl;
 	}
 }
