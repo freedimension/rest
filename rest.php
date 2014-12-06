@@ -36,30 +36,35 @@ class rest
 	 *
 	 * @param string $sPath Dynamic part of the URI that's to be called.
 	 * @param string $sData Optional data part to be sent with the request.
+	 * @param bool $bDecode Decodes JSON if true, otherwise returns the response untouched.
 	 * @return mixed Response data.
 	 */
 	public function delete (
 		$sPath,
-		$sData = ""
+		$sData = "",
+		$bDecode = false
 	){
 		$this->init($sPath);
 		$this->opt(CURLOPT_CUSTOMREQUEST, "DELETE");
 		$this->opt(CURLOPT_POSTFIELDS, $sData);
 		$this->opt(CURLOPT_RETURNTRANSFER, true);
-		return $this->exec();
+		return $this->exec($bDecode);
 	}
 
 	/**
 	 * Posts a HTTP GET request.
 	 *
 	 * @param string $sPath Dynamic part of the URI that's to be called.
+	 * @param bool $bDecode Decodes JSON if true, otherwise returns the response untouched.
 	 * @return mixed Response data. JSON is already decoded.
 	 */
-	public function get ($sPath)
-	{
+	public function get (
+		$sPath,
+		$bDecode = false
+	){
 		$this->init($sPath);
 		$this->opt(CURLOPT_RETURNTRANSFER, 1);
-		return $this->exec(true);
+		return $this->exec($bDecode);
 	}
 
 	/**
@@ -91,11 +96,13 @@ class rest
 	 *
 	 * @param string $sPath Dynamic part of the URI that's to be called.
 	 * @param mixed $mData Data to be sent with the POST request (i.e. the body part).
+	 * @param bool $bDecode Decodes JSON if true, otherwise returns the response untouched.
 	 * @return mixed The response data of the CURL call.
 	 */
 	public function post (
 		$sPath,
-		$mData
+		$mData,
+		$bDecode = false
 	){
 		$this->init($sPath);
 		$mData = $this->encode($mData);
@@ -103,7 +110,7 @@ class rest
 		$this->opt(CURLOPT_POST, 1);
 		$this->opt(CURLOPT_POSTFIELDS, $mData);
 		$this->opt(CURLOPT_RETURNTRANSFER, true);
-		return $this->exec();
+		return $this->exec($bDecode);
 	}
 
 	/**
@@ -111,11 +118,13 @@ class rest
 	 *
 	 * @param string $sPath Dynamic part of the URI that's to be called.
 	 * @param mixed $mData Data to be sent with the PUT request (i.e. the body part).
+	 * @param bool $bDecode Decodes JSON if true, otherwise returns the response untouched.
 	 * @return mixed The response data of the CURL call.
 	 */
 	public function put (
 		$sPath,
-		$mData
+		$mData,
+		$bDecode = false
 	){
 		$this->init($sPath);
 		$mData = $this->encode($mData);
@@ -128,7 +137,7 @@ class rest
 		$this->opt(CURLOPT_CUSTOMREQUEST, 'PUT');
 		$this->opt(CURLOPT_POSTFIELDS, $mData);
 		$this->opt(CURLOPT_RETURNTRANSFER, true);
-		return $this->exec();
+		return $this->exec($bDecode);
 	}
 
 	/**
@@ -172,7 +181,7 @@ class rest
 		$mResponse = curl_exec($this->rCurl);
 		if ( $bDecode )
 		{
-			$mResponse = json_decode($mResponse);
+			$mResponse = json_decode($mResponse, true);
 		}
 		return $mResponse;
 	}
