@@ -7,6 +7,13 @@ namespace freedimension\rest;
  */
 class rest
 {
+	const CONTENTTYPE_JSON = 1;
+	const CONTENTTYPE_URL  = 2;
+	protected $hContentType = [
+		self::CONTENTTYPE_JSON => "application/json",
+		self::CONTENTTYPE_URL  => "application/x-www-form-urlencoded;charset=UTF-8",
+	];
+	protected $sCharset     = "UTF-8";
 	/**
 	 * @var string Static part of the REST-URIs to be called.
 	 */
@@ -18,7 +25,9 @@ class rest
 	/**
 	 * @var array Holds the options set with curl_setopt, for easy retrieval.
 	 */
-	protected $hOption = [];
+	protected $hOption      = [];
+	protected $sHttpVersion = null;
+	protected $iContentType = self::CONTENTTYPE_JSON;
 
 	/**
 	 * Constructor of the class instance.
@@ -106,10 +115,11 @@ class rest
 	){
 		$this->init($sPath);
 		$mData = $this->encode($mData);
-		$this->opt(CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+		$this->opt(CURLOPT_HTTPHEADER, [$this->getContentType()]);
 		$this->opt(CURLOPT_POST, 1);
 		$this->opt(CURLOPT_POSTFIELDS, $mData);
 		$this->opt(CURLOPT_RETURNTRANSFER, true);
+		var_dump($this);
 		return $this->exec($bDecode);
 	}
 
@@ -130,7 +140,7 @@ class rest
 		$mData = $this->encode($mData);
 		$this->opt(CURLOPT_HTTPHEADER,
 			[
-				'Content-Type: application/json',
+				$this->getContentType(),
 				'Content-Length: ' . strlen($mData)
 			]
 		);
@@ -152,6 +162,16 @@ class rest
 		$this->sBaseUri = $sBaseUri;
 	}
 
+	public function setContentType ($sType)
+	{
+		$this->iContentType = $sType;
+	}
+
+	public function setHttpVersion ($sVersion)
+	{
+		$this->sHttpVersion = $sVersion;
+	}
+
 	/**
 	 * Encodes data to JSON if necessary.
 	 *
@@ -162,7 +182,16 @@ class rest
 	{
 		if ( is_array($mData) )
 		{
-			$mData = json_encode($mData);
+			switch ($this->iContentType)
+			{
+				case self::CONTENTTYPE_URL:
+					$mData = http_build_query($mData);
+					break;
+				case self::CONTENTTYPE_JSON: // fall through, it's also the default
+				default:
+					$mData = json_encode($mData);
+					break;
+			}
 		}
 		return $mData;
 	}
@@ -186,6 +215,11 @@ class rest
 		return $mResponse;
 	}
 
+	protected function getContentType ()
+	{
+		return "Content-Type: {$this->hContentType[$this->iContentType]};charset={$this->sCharset}";
+	}
+
 	/**
 	 * Initializes a new REST-Call.
 	 *
@@ -197,6 +231,10 @@ class rest
 		$this->hOption = [];
 		curl_reset($this->rCurl);
 		$this->opt(CURLOPT_URL, $this->sBaseUri . "/" . ltrim($sPath, "/"));
+		if ( null !== $this->sHttpVersion )
+		{
+			$this->opt(CURLOPT_HTTP_VERSION, $this->sHttpVersion);
+		}
 		return $this->rCurl;
 	}
 }
